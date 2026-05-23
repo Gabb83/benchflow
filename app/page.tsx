@@ -1,6 +1,6 @@
-'use client'; // Necessário se estiver usando a App Router do Next.js
+"use client"; // Necessário se estiver usando a App Router do Next.js
 
-import { useState } from 'react';
+import { useState } from "react";
 
 // 1. Definição dos tipos para organizar as opções
 type CenarioId = 'busca' | 'dashboard' | 'navegacao';
@@ -77,15 +77,61 @@ export default function Home() {
             <h2 className="text-center font-bold uppercase tracking-wider text-xs text-gray-400">CONFIGURAÇÃO</h2>
             <div className="flex flex-col gap-4 mt-2">
               {cenarioAtivo === 'busca' && (
-                <div className="space-y-3 animation-fadeIn">
+                <div className="space-y-2 animation-fadeIn">
+                  <div className="pt-2 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                       <button className="bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer">
+                        Array
+                      </button>
+                      
+                      {/* TOQUE DE FUCHSIA: Botão de destaque secundário */}
+                      <button className="bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer">
+                        Map
+                      </button>
+                    </div>
+                  </div>
+
                   <label className="block text-xs font-semibold text-gray-400">QTD. DE ITENS NA LISTA</label>
                   <input type="number" defaultValue={1000} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" />
-                  <label className="block text-xs font-semibold text-gray-400">MÉTODO DE FILTRO</label>
+                  
+                  <label className="block text-xs font-semibold text-gray-400">OPERAÇÃO</label>
                   <select className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm">
-                    <option>Regex (Client-side)</option>
-                    <option>Array.prototype.filter</option>
+                    <option>Busca</option>
+                    <option>Filtragem</option>
+                    <option>Ordenação</option>
                   </select>
-                </div>
+
+                  <label className="block text-xs font-semibold text-gray-400">ITERAÇÕES</label>
+                  <input type="number" defaultValue={1000} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" />
+
+                  <div className="pt-2 space-y-2">
+                    <button className="w-full bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer">
+                      Executar Benchmark
+                    </button>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <button className="border border-[#1e2939] hover:bg-[#1e2939]/30 text-gray-400 hover:text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all cursor-pointer">
+                        Resetar
+                      </button>
+                      
+                      {/* TOQUE DE FUCHSIA: Botão de destaque secundário */}
+                      <button className="bg-fuchsia-700 hover:bg-fuchsia-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer">
+                        Comparar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[#1e2939]/50 pt-4 mt-6">
+                    <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
+                      Contexto de Uso
+                    </span>
+                    <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5 text-center shadow-inner">
+                      <p className="text-xs text-emerald-400 font-medium tracking-wide">
+                        Tabelas, feeds, catálogos
+                      </p>
+                    </div>
+                  </div>
+                </div> 
               )}
               {cenarioAtivo === 'dashboard' && (
                 <div className="space-y-3">

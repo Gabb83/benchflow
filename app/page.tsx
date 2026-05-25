@@ -1,6 +1,7 @@
 "use client"; // Necessário se estiver usando a App Router do Next.js
 
 import { useState } from "react";
+import { Registro, geracaoDeDados } from "@/src/utils/generateData";
 
 // 1. Definição dos tipos para organizar as opções
 type CenarioId = 'busca' | 'dashboard' | 'navegacao';
@@ -14,13 +15,59 @@ interface Cenario {
 export default function Home() {
   // 2. Estado para controlar qual cenário está ativo
   const [cenarioAtivo, setCenarioAtivo] = useState<CenarioId>('busca');
-
+  
   // Lista de cenários (para evitar repetição de código no HTML)
   const cenarios: Cenario[] = [
     { id: 'busca', titulo: 'Busca e Filtragem', subtitulo: 'listas dinâmicas' },
     { id: 'dashboard', titulo: 'Dashboard', subtitulo: 'atualização dinâmica' },
     { id: 'navegacao', titulo: 'Navegação', subtitulo: 'hierarquia multinível' },
   ];
+
+  const [qtdItens, setQtdItens] = useState<number>(1000);
+  const [operacao, setOperacao] = useState<string>('Busca');
+  const [iteracoes, setIteracoes] = useState<number>(1000);
+
+  const [dadosGerados, setDadosGerados] = useState<Registro[]>([]);
+  const [tempoExecucao, setTempoExecucao] = useState<number | null>(null);
+  const [isRodando, setIsRodando] = useState<boolean>(false);
+
+  const lidarComExecucao = () => {
+    setIsRodando(true);
+    setTempoExecucao(null);
+
+    // Pequeno timeout para o React renderizar o estado de "carregando" antes de travar a thread
+    setTimeout(() => {
+      const t0 = performance.now();
+
+      // EXECUÇÃO 1: Vincula sua util aos inputs da tela
+      const novosDados = geracaoDeDados(qtdItens);
+      setDadosGerados(novosDados);
+
+      // EXECUÇÃO 2: Simula o processamento com base na operação escolhida
+      // (Aqui você colocaria suas funções reais de busca, filtro ou ordenação)
+      for (let i = 0; i < iteracoes; i++) {
+        if (operacao === 'Filtragem') {
+          novosDados.filter(p => p.categoria === 'Eletrônicos' && p.isDisponivel === 1);
+        } else if (operacao === 'Busca') {
+          novosDados.find(p => p.idx === qtdItens - 1);
+        } else if (operacao === 'Ordenação') {
+          // Usando toSorted para não mutar o array original
+          novosDados.toSorted((a, b) => b.preco - a.preco); 
+        }
+      }
+
+      const t1 = performance.now();
+      
+      // Salva o tempo gasto em milissegundos
+      setTempoExecucao(parseFloat((t1 - t0).toFixed(2)));
+      setIsRodando(false);
+    }, 50);
+  };
+
+  const resetarBenchmark = () => {
+    setDadosGerados([]);
+    setTempoExecucao(null);
+  };
 
   return (
     <div className="bg-[#111111] text-white min-h-screen">
@@ -92,25 +139,29 @@ export default function Home() {
                   </div>
 
                   <label className="block text-xs font-semibold text-gray-400">QTD. DE ITENS NA LISTA</label>
-                  <input type="number" defaultValue={1000} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" />
+                  <input type="number" defaultValue={1000} value={qtdItens} 
+                      onChange={(e) => setQtdItens(Number(e.target.value))} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" />
                   
                   <label className="block text-xs font-semibold text-gray-400">OPERAÇÃO</label>
-                  <select className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm">
+                  <select value={operacao}
+                      onChange={(e) => setOperacao(e.target.value)} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm">
                     <option>Busca</option>
                     <option>Filtragem</option>
                     <option>Ordenação</option>
                   </select>
 
                   <label className="block text-xs font-semibold text-gray-400">ITERAÇÕES</label>
-                  <input type="number" defaultValue={1000} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" />
+                  <input  type="number" defaultValue={1000} value={iteracoes} 
+                      onChange={(e) => setIteracoes(Number(e.target.value))} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" />
 
                   <div className="pt-2 space-y-2">
-                    <button className="w-full bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer">
-                      Executar Benchmark
+                    <button onClick={lidarComExecucao}
+                      disabled={isRodando} className="w-full bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer">
+                      {isRodando ? 'Processando...' : 'Executar Benchmark'}
                     </button>
                     
                     <div className="grid grid-cols-2 gap-2">
-                      <button className="border border-[#1e2939] hover:bg-[#1e2939]/30 text-gray-400 hover:text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all cursor-pointer">
+                      <button onClick={resetarBenchmark} className="border border-[#1e2939] hover:bg-[#1e2939]/30 text-gray-400 hover:text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all cursor-pointer">
                         Resetar
                       </button>
                       
@@ -151,36 +202,47 @@ export default function Home() {
         {/* COLUNA 3: CONTEÚDO PRINCIPAL DINÂMICO */}
         <section className="col-span-8 border border-[#1e2939] bg-[#12151b] rounded-2xl p-6 flex flex-col justify-between">
           <div>
-            {cenarioAtivo === 'busca' && (
-              <div>
-                <h1 className="text-xl font-semibold mb-2">Simulador de Busca e Filtragem</h1>
-                <p className="text-gray-400 text-sm mb-4">Mapeamento de performance para renderização de listas complexas.</p>
-                <div className="border border-[#1e2939] p-4 rounded-lg bg-[#111] h-64 flex items-center justify-center text-gray-500">
-                  [Gráfico ou Tabela de Carga da Lista]
-                </div>
+            <h1 className="text-xl font-semibold mb-2">Simulador de {operacao}</h1>
+            <p className="text-gray-400 text-sm mb-6">Mapeamento de performance baseado em dados estruturados estáticos.</p>
+            
+            {/* CARD DE RESULTADOS RÁPIDOS */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Total</p>
+                <p className="text-xl font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao} ms` : '--'}</p>
               </div>
-            )}
+              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                <p className="text-[10px] text-gray-500 font-bold uppercase">Dados em Memória</p>
+                <p className="text-xl font-mono text-emerald-400">{dadosGerados.length.toLocaleString()}</p>
+              </div>
+              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                <p className="text-[10px] text-gray-500 font-bold uppercase">Complexidade Absoluta</p>
+                <p className="text-xl font-mono text-blue-400">{(qtdItens * iteracoes).toLocaleString()} ops</p>
+              </div>
+            </div>
 
-            {cenarioAtivo === 'dashboard' && (
-              <div>
-                <h1 className="text-xl font-semibold mb-2">Métricas do Dashboard Dinâmico</h1>
-                <p className="text-gray-400 text-sm mb-4 font-mono text-xs text-amber-500">FPS / Memory Leak Analysis</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="border border-[#1e2939] p-4 rounded-lg bg-[#111]">FPS Estável: 60fps</div>
-                  <div className="border border-[#1e2939] p-4 rounded-lg bg-[#111]">Uso de CPU: 4%</div>
+            {/* PREVIEW DA TABELA DE DADOS GERADOS */}
+            <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-64 overflow-y-auto font-mono text-xs text-gray-400">
+              {dadosGerados.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-gray-600 italic">
+                  [Aguardando execução para renderizar dados amostrais]
                 </div>
-              </div>
-            )}
-
-            {cenarioAtivo === 'navegacao' && (
-              <div>
-                <h1 className="text-xl font-semibold mb-2">Estrutura de Navegação Multinível</h1>
-                <p className="text-gray-400 text-sm mb-4">Profundidade máxima recomendada de nós na árvore DOM.</p>
-                <div className="border border-[#1e2939] p-4 rounded-lg bg-[#111] h-64 flex items-center justify-center text-gray-500">
-                  [Visualizador da Árvore de Componentes]
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-gray-500 border-b border-[#1e2939] pb-1 mb-2">// Primeiros 5 itens gerados no array:</p>
+                  {dadosGerados.slice(0, 5).map((item) => (
+                    <div key={item.idx} className="flex gap-4 hover:bg-[#12151b] p-1 rounded">
+                      <span className="text-blue-500">idx: {item.idx}</span>
+                      <span className="text-white">{item.nome}</span>
+                      <span className="text-amber-500">{item.categoria}</span>
+                      <span className="text-emerald-500">R$ {item.preco}</span>
+                      <span>Disponível: {item.isDisponivel}</span>
+                    </div>
+                  ))}
+                  <p className="text-gray-600 text-[10px] pt-2">... e mais {dadosGerados.length - 5} itens ocultados do preview por performance.</p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </section>
       </main>

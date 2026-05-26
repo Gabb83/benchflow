@@ -289,43 +289,55 @@ export default function Home() {
           <div>
             <h1 className="text-xl font-semibold mb-2">Simulador de {operacao} em <span className="capitalize text-fuchsia-400">{estrutura}</span></h1>
             <p className="text-gray-400 text-sm mb-6">Mapeamento de performance baseado em dados estruturados estáticos.</p>
-            
-            <div className="grid grid-cols-5 gap-4 mb-6">
-              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Total</p>
-                <p className="text-md font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao.toFixed(2)} ms` : '0.00 ms'}</p>
-              </div>
-              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Médio</p>
-                <p className="text-md font-mono text-purple-400">
-                  {tempoExecucao !== null && iteracoes > 0
-                    ? `${(tempoExecucao / iteracoes).toFixed(2)} ms`
-                    : '0.00 ms'}
-                </p>
-              </div>
-              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                <p className="text-[10px] text-gray-500 font-bold uppercase">Dados em Memória</p>
-                <p className="text-md font-mono text-emerald-400">{dadosGerados.length.toLocaleString()}</p>
-              </div>
-              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-              <p className="text-[10px] text-gray-500 font-bold uppercase">RAM Consumida</p>
-              <p className="text-md font-mono text-emerald-400">
-                {memoriaConsumida !== null ? `${memoriaConsumida} MB` : 'N/A'}
-              </p>
-            </div>
-              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                <p className="text-[10px] text-gray-500 font-bold uppercase">Complexidade Absoluta</p>
-                <p className="text-md font-mono text-blue-400">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(qtdItens * iteracoes)} ops</p>
-                {/* {(qtdItens * iteracoes).toExponential(2)} */}
-              </div>
-            </div>
 
-            <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-64 overflow-y-auto font-mono text-xs text-gray-400">
-              {dadosGerados.length === 0 ? (
+            { isRodando ? (
+              <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-90 overflow-y-auto font-mono text-xs text-gray-400">
+                <div className="h-full w-full flex flex-col items-center justify-center gap-3 animate-[fadeIn_0.15s_ease-out]">
+                  {/* SPINNER CYBERPUNK: Roda em fuchsia com uma borda sutil */}
+                  <div className="w-8 h-8 border-2 border-fuchsia-500/20 border-t-fuchsia-500 rounded-full animate-spin"></div>
+                  <p className="text-gray-500 text-xs tracking-wider animate-pulse">
+                    Processando buffers e estruturas...
+                  </p>
+                </div>
+              </div>
+            ) : dadosGerados.length === 0 ? (
+              <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-90 overflow-y-auto font-mono text-xs text-gray-400">
                 <div className="h-full flex items-center justify-center text-gray-600 italic">
                   [Aguardando execução para renderizar dados amostrais]
                 </div>
+              </div>
               ) : (
+              <div>
+                <div className="grid grid-cols-5 gap-4 mb-6">
+                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Total</p>
+                    <p className="text-md font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao.toFixed(2)} ms` : '0.00 ms'}</p>
+                  </div>
+                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Médio</p>
+                    <p className="text-md font-mono text-purple-400">
+                      {tempoExecucao !== null && iteracoes > 0
+                        ? `${(tempoExecucao / iteracoes).toFixed(2)} ms`
+                        : '0.00 ms'}
+                    </p>
+                  </div>
+                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">Dados em Memória</p>
+                    <p className="text-md font-mono text-emerald-400">{dadosGerados.length.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">RAM Consumida</p>
+                    <p className="text-md font-mono text-emerald-400">
+                      {memoriaConsumida !== null ? `${memoriaConsumida} MB` : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">Complexidade Absoluta</p>
+                    <p className="text-md font-mono text-blue-400">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(qtdItens * iteracoes)} ops</p>
+                    {/* {(qtdItens * iteracoes).toExponential(2)} */}
+                  </div>
+                </div>
+                <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-64 overflow-y-auto font-mono text-xs text-gray-400">
                 <div className="space-y-1">
                   <p className="text-gray-500 border-b border-[#1e2939] pb-1 mb-2">// Primeiros 5 itens gerados no array:</p>
                   {dadosGerados.slice(0, 5).map((item) => (
@@ -339,8 +351,9 @@ export default function Home() {
                   ))}
                   <p className="text-gray-600 text-[10px] pt-2">... e mais {dadosGerados.length - 5} itens ocultados do preview por performance.</p>
                 </div>
-              )}
+              </div>
             </div>
+            )}
           </div>
         </section>
       </main>

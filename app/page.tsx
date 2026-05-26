@@ -29,6 +29,7 @@ export default function Home() {
 
   const [dadosGerados, setDadosGerados] = useState<Registro[]>([]);
   const [tempoExecucao, setTempoExecucao] = useState<number | null>(null);
+  const [memoriaConsumida, setMemoriaConsumida] = useState<number | null>(null);
   const [isRodando, setIsRodando] = useState<boolean>(false);
 
   const validarApenasNumeros = (valor: string, callback: (v: number) => void) => {
@@ -38,9 +39,13 @@ export default function Home() {
 
   const lidarComExecucao = () => {
     setIsRodando(true);
+    setMemoriaConsumida(null);
     setTempoExecucao(null);
 
     setTimeout(() => {
+      const suportaMemoria = typeof window !== 'undefined' && window.performance && window.performance.memory;
+      const m0 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      
       const t0 = performance.now();
       
       const listaProdutos = geracaoDeDados(qtdItens);
@@ -74,6 +79,16 @@ export default function Home() {
       }
 
       const t1 = performance.now();
+      const m1 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+
+      if (suportaMemoria) {
+        const diferencaBytes = m1 - m0;
+        const diferencaMB = diferencaBytes / (1024 * 1024);
+        setMemoriaConsumida(diferencaMB > 0 ? parseFloat(diferencaMB.toFixed(2)) : 0.01);
+      } else {
+        setMemoriaConsumida(null);
+      }
+
       setTempoExecucao(parseFloat((t1 - t0).toFixed(2)));
       setIsRodando(false);
     }, 50);
@@ -131,6 +146,16 @@ export default function Home() {
               <p>• Status: <span className="text-gray-300">Pronto</span></p>
               <p>• Execuções: <span className="text-gray-300">12</span></p>
               <p>• Último teste: <span className="text-gray-300">Há 5m</span></p>
+              <div className="border-t border-[#1e2939]/50 pt-4 mt-4">
+                <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
+                  Contexto de Uso
+                </span>
+                <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5 text-center shadow-inner">
+                  <p className="text-xs text-emerald-400 font-medium tracking-wide">
+                    Tabelas, feeds, catálogos
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -221,36 +246,25 @@ export default function Home() {
                       type="button"
                       disabled={isRodando} 
                       onClick={lidarComExecucao}
-                      className="w-full bg-[#1e2939] hover:bg-[#253347] disabled:opacity-50 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer"
+                      className="w-full bg-emerald-950/40 border border-emerald-500/30 hover:bg-[#253347] disabled:opacity-50 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer"
                     >
                       {isRodando ? 'Processando...' : 'Executar Benchmark'}
                     </button>
                     
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                       <button 
                         type="button"
                         onClick={resetarBenchmark} 
-                        className="border border-[#1e2939] hover:bg-[#1e2939]/30 text-gray-400 hover:text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all cursor-pointer"
+                        className="bg-rose-800/40 border border-rose-500/30 text-white text-xs font-semibold tracking-wide py-2 px-3 rounded-lg transition-all cursor-pointer"
                       >
                         Resetar
                       </button>
-                      <button 
+                      {/* <button 
                         type="button"
                         className="bg-fuchsia-700 hover:bg-fuchsia-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer"
                       >
                         Comparar
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-[#1e2939]/50 pt-4 mt-4">
-                    <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
-                      Contexto de Uso
-                    </span>
-                    <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5 text-center shadow-inner">
-                      <p className="text-xs text-emerald-400 font-medium tracking-wide">
-                        Tabelas, feeds, catálogos
-                      </p>
+                      </button> */}
                     </div>
                   </div>
                 </div> 
@@ -276,14 +290,14 @@ export default function Home() {
             <h1 className="text-xl font-semibold mb-2">Simulador de {operacao} em <span className="capitalize text-fuchsia-400">{estrutura}</span></h1>
             <p className="text-gray-400 text-sm mb-6">Mapeamento de performance baseado em dados estruturados estáticos.</p>
             
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-5 gap-4 mb-6">
               <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
                 <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Total</p>
-                <p className="text-xl font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao.toFixed(2)} ms` : '0.00 ms'}</p>
+                <p className="text-md font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao.toFixed(2)} ms` : '0.00 ms'}</p>
               </div>
               <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
                 <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Médio</p>
-                <p className="text-xl font-mono text-purple-400">
+                <p className="text-md font-mono text-purple-400">
                   {tempoExecucao !== null && iteracoes > 0
                     ? `${(tempoExecucao / iteracoes).toFixed(2)} ms`
                     : '0.00 ms'}
@@ -291,11 +305,18 @@ export default function Home() {
               </div>
               <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
                 <p className="text-[10px] text-gray-500 font-bold uppercase">Dados em Memória</p>
-                <p className="text-xl font-mono text-emerald-400">{dadosGerados.length.toLocaleString()}</p>
+                <p className="text-md font-mono text-emerald-400">{dadosGerados.length.toLocaleString()}</p>
               </div>
               <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+              <p className="text-[10px] text-gray-500 font-bold uppercase">RAM Consumida</p>
+              <p className="text-md font-mono text-emerald-400">
+                {memoriaConsumida !== null ? `${memoriaConsumida} MB` : 'N/A'}
+              </p>
+            </div>
+              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
                 <p className="text-[10px] text-gray-500 font-bold uppercase">Complexidade Absoluta</p>
-                <p className="text-xl font-mono text-blue-400">{(qtdItens * iteracoes).toLocaleString()} ops</p>
+                <p className="text-md font-mono text-blue-400">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(qtdItens * iteracoes)} ops</p>
+                {/* {(qtdItens * iteracoes).toExponential(2)} */}
               </div>
             </div>
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Registro, geracaoDeDados } from "@/src/utils/generateData";
 
 type CenarioId = 'busca' | 'dashboard' | 'navegacao';
+type EstruturaId = 'array' | 'map';
 
 interface Cenario {
   id: CenarioId;
@@ -20,13 +21,20 @@ export default function Home() {
     { id: 'navegacao', titulo: 'Navegação', subtitulo: 'hierarquia multinível' },
   ];
 
+  const [estrutura, setEstrutura] = useState<EstruturaId>('array');
   const [qtdItens, setQtdItens] = useState<number>(1000);
   const [operacao, setOperacao] = useState<string>('Busca');
   const [iteracoes, setIteracoes] = useState<number>(1000);
+  const [termoBusca, setTermoBusca] = useState<string>("Produto #999");
 
   const [dadosGerados, setDadosGerados] = useState<Registro[]>([]);
   const [tempoExecucao, setTempoExecucao] = useState<number | null>(null);
   const [isRodando, setIsRodando] = useState<boolean>(false);
+
+  const validarApenasNumeros = (valor: string, callback: (v: number) => void) => {
+    const apenasNumeros = valor.replace(/\D/g, "");
+    callback(Number(apenasNumeros));
+  };
 
   const lidarComExecucao = () => {
     setIsRodando(true);
@@ -34,21 +42,38 @@ export default function Home() {
 
     setTimeout(() => {
       const t0 = performance.now();
-      const novosDados = geracaoDeDados(qtdItens);
-      setDadosGerados(novosDados);
+      
+      const listaProdutos = geracaoDeDados(qtdItens);
+      setDadosGerados(listaProdutos);
+
+      let mapaProdutos = new Map<string, Registro>();
+      if (estrutura === 'map') {
+        listaProdutos.forEach(p => mapaProdutos.set(p.nome, p));
+      }
 
       for (let i = 0; i < iteracoes; i++) {
-        if (operacao === 'Filtragem') {
-          novosDados.filter(p => p.categoria === 'Eletrônicos' && p.isDisponivel === 1);
-        } else if (operacao === 'Busca') {
-          novosDados.find(p => p.idx === qtdItens - 1);
-        } else if (operacao === 'Ordenação') {
-          novosDados.toSorted((a, b) => b.preco - a.preco); 
+        if (estrutura === 'array') {
+          if (operacao === 'Filtragem') {
+            listaProdutos.filter(p => p.categoria === 'Eletrônicos' && p.isDisponivel === 1);
+          } else if (operacao === 'Busca') {
+            listaProdutos.find(p => p.nome === termoBusca);
+          } else if (operacao === 'Ordenação') {
+            listaProdutos.toSorted((a, b) => b.preco - a.preco); 
+          }
+        } 
+        
+        else if (estrutura === 'map') {
+          if (operacao === 'Busca') {
+            mapaProdutos.get(termoBusca);
+          } else if (operacao === 'Filtragem') {
+            Array.from(mapaProdutos.values()).filter(p => p.categoria === 'Eletrônicos');
+          } else if (operacao === 'Ordenação') {
+            Array.from(mapaProdutos.values()).toSorted((a, b) => b.preco - a.preco);
+          }
         }
       }
 
       const t1 = performance.now();
-      
       setTempoExecucao(parseFloat((t1 - t0).toFixed(2)));
       setIsRodando(false);
     }, 50);
@@ -114,67 +139,103 @@ export default function Home() {
             <h2 className="text-center font-bold uppercase tracking-wider text-xs text-gray-400">CONFIGURAÇÃO</h2>
             <div className="flex flex-col gap-4 mt-2">
               {cenarioAtivo === 'busca' && (
-                <div className="space-y-2 animation-fadeIn">
-                  <div className="pt-2 space-y-2">
+                <div className="space-y-3 animate-[fadeIn_0.2s_ease-out]">
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide">Estrutura de Dados</label>
                     <div className="grid grid-cols-2 gap-2">
                       <button 
-                        className="bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer"
+                        type="button"
+                        onClick={() => setEstrutura('array')}
+                        className={`text-xs font-semibold py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer border ${
+                          estrutura === 'array'
+                            ? 'bg-[#1e2939] border-white text-white shadow-md scale-[1.02]'
+                            : 'bg-transparent border-[#1e2939] text-gray-400 hover:bg-[#1e2939]/30'
+                        }`}
                       >
                         Array
                       </button>
                       <button 
-                        className="bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer"
+                        type="button"
+                        onClick={() => setEstrutura('map')}
+                        className={`text-xs font-semibold py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer border ${
+                          estrutura === 'map'
+                            ? 'bg-[#1e2939] border-white text-white shadow-md scale-[1.02]'
+                            : 'bg-transparent border-[#1e2939] text-gray-400 hover:bg-[#1e2939]/30'
+                        }`}
                       >
                         Map
                       </button>
                     </div>
                   </div>
 
-                  <label className="block text-xs font-semibold text-gray-400">QTD. DE ITENS NA LISTA</label>
-                  <input 
-                    type="number" defaultValue={1000} 
-                    value={qtdItens} 
-                    onChange={(e) => setQtdItens(Number(e.target.value))} 
-                    className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" 
-                  />
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">QTD. DE ITENS NA LISTA</label>
+                    <input 
+                      type="text" 
+                      inputMode="numeric"
+                      value={qtdItens} 
+                      onChange={(e) => validarApenasNumeros(e.target.value, setQtdItens)} 
+                      className="w-full bg-[#111] border border-[#1e2939] focus:border-gray-400 rounded px-3 py-1.5 text-sm text-white font-mono outline-none transition-colors" 
+                    />
+                  </div>
                   
-                  <label className="block text-xs font-semibold text-gray-400">OPERAÇÃO</label>
-                  <select 
-                    value={operacao}
-                    onChange={(e) => setOperacao(e.target.value)} 
-                    className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm"
-                  >
-                    <option>Busca</option>
-                    <option>Filtragem</option>
-                    <option>Ordenação</option>
-                  </select>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">OPERAÇÃO</label>
+                    <select 
+                      value={operacao}
+                      onChange={(e) => setOperacao(e.target.value)} 
+                      className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm text-white outline-none cursor-pointer"
+                    >
+                      <option value="Busca">Busca</option>
+                      <option value="Filtragem">Filtragem</option>
+                      <option value="Ordenação">Ordenação</option>
+                    </select>
+                  </div>
 
-                  <label className="block text-xs font-semibold text-gray-400">ITERAÇÕES</label>
-                  <input  
-                    type="number" 
-                    defaultValue={1000} 
-                    value={iteracoes} 
-                    onChange={(e) => setIteracoes(Number(e.target.value))} 
-                    className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" 
-                  />
+                  {(operacao === 'Busca' || operacao === 'Filtragem') && (
+                    <div className="animate-[fadeIn_0.15s_ease-out]">
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Alvo do Teste (Termo)</label>
+                      <input 
+                        type="text"
+                        value={termoBusca}
+                        onChange={(e) => setTermoBusca(e.target.value)}
+                        placeholder="Ex: Produto #999"
+                        className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm text-white outline-none font-mono"
+                      />
+                    </div>
+                  )}
 
-                  <div className="pt-2 space-y-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">ITERAÇÕES</label>
+                    <input  
+                      type="text" 
+                      inputMode="numeric"
+                      value={iteracoes} 
+                      onChange={(e) => validarApenasNumeros(e.target.value, setIteracoes)} 
+                      className="w-full bg-[#111] border border-[#1e2939] focus:border-gray-400 rounded px-3 py-1.5 text-sm text-white font-mono outline-none transition-colors" 
+                    />
+                  </div>
+
+                  <div className="pt-1 space-y-2">
                     <button 
+                      type="button"
                       disabled={isRodando} 
                       onClick={lidarComExecucao}
-                      className="w-full bg-[#1e2939] hover:bg-[#253347] text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer"
+                      className="w-full bg-[#1e2939] hover:bg-[#253347] disabled:opacity-50 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer"
                     >
                       {isRodando ? 'Processando...' : 'Executar Benchmark'}
                     </button>
                     
                     <div className="grid grid-cols-2 gap-2">
                       <button 
+                        type="button"
                         onClick={resetarBenchmark} 
                         className="border border-[#1e2939] hover:bg-[#1e2939]/30 text-gray-400 hover:text-white text-xs font-semibold py-2 px-3 rounded-lg transition-all cursor-pointer"
                       >
                         Resetar
                       </button>
                       <button 
+                        type="button"
                         className="bg-fuchsia-700 hover:bg-fuchsia-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer"
                       >
                         Comparar
@@ -182,7 +243,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="border-t border-[#1e2939]/50 pt-4 mt-6">
+                  <div className="border-t border-[#1e2939]/50 pt-4 mt-4">
                     <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
                       Contexto de Uso
                     </span>
@@ -212,13 +273,21 @@ export default function Home() {
         {/* COLUNA 3 */}
         <section className="col-span-8 border border-[#1e2939] bg-[#12151b] rounded-2xl p-6 flex flex-col justify-between">
           <div>
-            <h1 className="text-xl font-semibold mb-2">Simulador de {operacao}</h1>
+            <h1 className="text-xl font-semibold mb-2">Simulador de {operacao} em <span className="capitalize text-fuchsia-400">{estrutura}</span></h1>
             <p className="text-gray-400 text-sm mb-6">Mapeamento de performance baseado em dados estruturados estáticos.</p>
             
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
                 <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Total</p>
-                <p className="text-xl font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao} ms` : '--'}</p>
+                <p className="text-xl font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao.toFixed(2)} ms` : '0.00 ms'}</p>
+              </div>
+              <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
+                <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Médio</p>
+                <p className="text-xl font-mono text-purple-400">
+                  {tempoExecucao !== null && iteracoes > 0
+                    ? `${(tempoExecucao / iteracoes).toFixed(2)} ms`
+                    : '0.00 ms'}
+                </p>
               </div>
               <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
                 <p className="text-[10px] text-gray-500 font-bold uppercase">Dados em Memória</p>
@@ -230,7 +299,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* PREVIEW DA TABELA DE DADOS GERADOS */}
             <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-64 overflow-y-auto font-mono text-xs text-gray-400">
               {dadosGerados.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-gray-600 italic">

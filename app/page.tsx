@@ -10,15 +10,16 @@ interface Cenario {
   id: CenarioId;
   titulo: string;
   subtitulo: string;
+  contexto?: string;
 }
 
 export default function Home() {
   const [cenarioAtivo, setCenarioAtivo] = useState<CenarioId>('busca');
   
   const cenarios: Cenario[] = [
-    { id: 'busca', titulo: 'Busca e Filtragem', subtitulo: 'listas dinâmicas' },
-    { id: 'dashboard', titulo: 'Dashboard', subtitulo: 'atualização dinâmica' },
-    { id: 'navegacao', titulo: 'Navegação', subtitulo: 'hierarquia multinível' },
+    { id: 'busca', titulo: 'Busca e Filtragem', subtitulo: 'listas dinâmicas', contexto: 'Tabelas, feeds, catálogos' },
+    { id: 'dashboard', titulo: 'Dashboard', subtitulo: 'atualização dinâmica', contexto: 'Painéis administrativos e monitoramento de dados' },
+    { id: 'navegacao', titulo: 'Navegação', subtitulo: 'hierarquia multinível', contexto: 'Menus multiníveis e estruturas DOM' },
   ];
 
   const [estrutura, setEstrutura] = useState<EstruturaId>('array');
@@ -151,9 +152,15 @@ export default function Home() {
                   Contexto de Uso
                 </span>
                 <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5 text-center shadow-inner">
-                  <p className="text-xs text-emerald-400 font-medium tracking-wide">
-                    Tabelas, feeds, catálogos
-                  </p>
+                  {cenarios.filter((cenario) => cenario.id === cenarioAtivo)
+                    .map((cenario, idx) => (
+                      <p
+                        key={cenario.id || idx}
+                        className="text-xs text-emerald-400 font-medium tracking-wide"
+                      >
+                        {cenario.contexto || "Sem contexto definido"}
+                      </p>
+                    ))}
                 </div>
               </div>
             </div>

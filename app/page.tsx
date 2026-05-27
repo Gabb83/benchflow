@@ -5,12 +5,25 @@ import { Registro, geracaoDeDados } from "@/src/utils/generateData";
 
 type CenarioId = 'busca' | 'dashboard' | 'navegacao';
 type EstruturaId = 'array' | 'map';
+type EstruturaDashboardId = 'array' | 'map' | 'fila';
 
 interface Cenario {
   id: CenarioId;
   titulo: string;
   subtitulo: string;
   contexto?: string;
+}
+
+interface PerformanceMemory {
+  jsHeapSizeLimit: number;
+  totalJSHeapSize: number;
+  usedJSHeapSize: number;
+}
+
+declare global {
+  interface Performance {
+    memory?: PerformanceMemory;
+  }
 }
 
 export default function Home() {
@@ -22,12 +35,18 @@ export default function Home() {
     { id: 'navegacao', titulo: 'Navegação', subtitulo: 'hierarquia multinível', contexto: 'Menus multiníveis e estruturas DOM' },
   ];
 
+  // Configurações do Cenário 1 (Busca)
   const [estrutura, setEstrutura] = useState<EstruturaId>('array');
   const [qtdItens, setQtdItens] = useState<number>(1000);
   const [operacao, setOperacao] = useState<string>('Busca');
   const [iteracoes, setIteracoes] = useState<number>(1000);
   const [termoBusca, setTermoBusca] = useState<string>("Produto #999");
 
+  // Configurações do Cenário 2 (Dashboard)
+  const [estruturaDashboard, setEstruturaDashboard] = useState<EstruturaDashboardId>('array');
+  const [frequenciaMs, setFrequenciaMs] = useState<number>(500);
+
+  // Estados globais de monitoramento do Benchmark
   const [dadosGerados, setDadosGerados] = useState<Registro[]>([]);
   const [tempoExecucao, setTempoExecucao] = useState<number | null>(null);
   const [memoriaConsumida, setMemoriaConsumida] = useState<number | null>(null);
@@ -98,6 +117,7 @@ export default function Home() {
   const resetarBenchmark = () => {
     setDadosGerados([]);
     setTempoExecucao(null);
+    setMemoriaConsumida(null);
   };
 
   return (
@@ -107,7 +127,7 @@ export default function Home() {
           <h1 className="text-xl font-black tracking-tighter italic">BenchFlow.</h1>
         </div>
         <div className="flex flex-row items-center justify-between gap-5">
-          <button className="bg-[#1e2939] hover:bg-[#2b3a50] px-4 py-1.5 rounded-md text-sm font-medium transition-colors">Executar</button>
+          <button onClick={lidarComExecucao} disabled={isRodando} className="bg-[#1e2939] hover:bg-[#2b3a50] disabled:opacity-50 px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer">Executar</button>
           <button className="text-sm font-medium hover:text-gray-300 transition-colors">Exportar</button>
           <p className="text-xs bg-[#1e2939]/50 text-gray-400 px-2 py-1 rounded border border-[#1e2939]">MVP v1.0</p>
         </div>
@@ -144,7 +164,7 @@ export default function Home() {
             </div>
             
             <div className="border-t border-dashed border-[#1e2939] pt-4 text-xs text-gray-500 space-y-1">
-              <p>• Status: <span className="text-gray-300">Pronto</span></p>
+              <p>• Status: <span className="text-gray-300">{isRodando ? 'Processando' : 'Pronto'}</span></p>
               <p>• Execuções: <span className="text-gray-300">12</span></p>
               <p>• Último teste: <span className="text-gray-300">Há 5m</span></p>
               <div className="border-t border-[#1e2939]/50 pt-4 mt-4">
@@ -216,7 +236,7 @@ export default function Home() {
                     <select 
                       value={operacao}
                       onChange={(e) => setOperacao(e.target.value)} 
-                      className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm text-white outline-none cursor-pointer"
+                      className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm text-white outline-none cursor-pointer p-1"
                     >
                       <option value="Busca">Busca</option>
                       <option value="Filtragem">Filtragem</option>
@@ -253,7 +273,7 @@ export default function Home() {
                       type="button"
                       disabled={isRodando} 
                       onClick={lidarComExecucao}
-                      className="w-full bg-emerald-950/40 border border-emerald-500/30 hover:bg-[#253347] disabled:opacity-50 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer"
+                      className="w-full bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/60 disabled:opacity-50 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer"
                     >
                       {isRodando ? 'Processando...' : 'Executar Benchmark'}
                     </button>
@@ -262,24 +282,90 @@ export default function Home() {
                       <button 
                         type="button"
                         onClick={resetarBenchmark} 
-                        className="bg-rose-800/40 border border-rose-500/30 text-white text-xs font-semibold tracking-wide py-2 px-3 rounded-lg transition-all cursor-pointer"
+                        className="bg-rose-800/40 border border-rose-500/30 hover:bg-rose-900/40 text-white text-xs font-semibold tracking-wide py-2 px-3 rounded-lg transition-all cursor-pointer"
                       >
                         Resetar
                       </button>
-                      {/* <button 
-                        type="button"
-                        className="bg-fuchsia-700 hover:bg-fuchsia-600 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-lg shadow-fuchsia-900/20 cursor-pointer"
-                      >
-                        Comparar
-                      </button> */}
                     </div>
                   </div>
                 </div> 
               )}
               {cenarioAtivo === 'dashboard' && (
-                <div className="space-y-3">
-                  <label className="block text-xs font-semibold text-gray-400">INTERVALO DE ATUALIZAÇÃO</label>
-                  <input type="text" defaultValue="500ms" className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm" />
+                <div className="space-y-3 animate-[fadeIn_0.2s_ease-out]">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">INTERVALO DE ATUALIZAÇÃO</label>
+                    <select 
+                      value={frequenciaMs} 
+                      onChange={(e) => setFrequenciaMs(Number(e.target.value))}
+                      className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm text-white outline-none cursor-pointer p-1"
+                    >
+                      <option value={50}>50ms</option>
+                      <option value={100}>100ms</option>
+                      <option value={500}>500ms</option>
+                      <option value={1000}>1000ms</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide">Estrutura do Painel</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {(['array', 'map', 'fila'] as EstruturaDashboardId[]).map((est) => (
+                        <button 
+                          key={est}
+                          type="button"
+                          onClick={() => setEstruturaDashboard(est)}
+                          className={`text-[11px] font-semibold py-2 px-1 rounded-lg transition-all capitalize border cursor-pointer ${
+                            estruturaDashboard === est
+                              ? 'bg-[#1e2939] border-white text-white shadow-md scale-[1.02]'
+                              : 'bg-transparent border-[#1e2939] text-gray-400 hover:bg-[#1e2939]/30'
+                          }`}
+                        >
+                          {est}
+                        </button>
+                      ))}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">VOLUME DE ATUALIZAÇÃO</label>
+                      <input 
+                        type="text" 
+                        inputMode="numeric"
+                        value={qtdItens} 
+                        onChange={(e) => validarApenasNumeros(e.target.value, setQtdItens)} 
+                        className="w-full bg-[#111] border border-[#1e2939] focus:border-gray-400 rounded px-3 py-1.5 text-sm text-white font-mono outline-none transition-colors" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">TAMANHO DO BUFFER</label>
+                      <input 
+                        type="text" 
+                        inputMode="numeric"
+                        value={qtdItens} 
+                        onChange={(e) => validarApenasNumeros(e.target.value, setQtdItens)} 
+                        className="w-full bg-[#111] border border-[#1e2939] focus:border-gray-400 rounded px-3 py-1.5 text-sm text-white font-mono outline-none transition-colors" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-1 space-y-2">
+                    <button 
+                      type="button"
+                      disabled={isRodando} 
+                      onClick={lidarComExecucao}
+                      className="w-full bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/60 disabled:opacity-50 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer"
+                    >
+                      {isRodando ? 'Processando...' : 'Executar Benchmark'}
+                    </button>
+                    
+                    <div className="grid grid-cols-1 gap-2">
+                      <button 
+                        type="button"
+                        onClick={resetarBenchmark} 
+                        className="bg-rose-800/40 border border-rose-500/30 hover:bg-rose-900/40 text-white text-xs font-semibold tracking-wide py-2 px-3 rounded-lg transition-all cursor-pointer"
+                      >
+                        Resetar
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
               {cenarioAtivo === 'navegacao' && (
@@ -293,74 +379,75 @@ export default function Home() {
     
         {/* COLUNA 3 */}
         <section className="col-span-8 border border-[#1e2939] bg-[#12151b] rounded-2xl p-6 flex flex-col justify-between">
-          <div>
-            <h1 className="text-xl font-semibold mb-2">Simulador de {operacao} em <span className="capitalize text-fuchsia-400">{estrutura}</span></h1>
-            <p className="text-gray-400 text-sm mb-6">Mapeamento de performance baseado em dados estruturados estáticos.</p>
+          <div className="flex flex-col h-full justify-between">
+            <div>
+              <h1 className="text-xl font-semibold mb-2">Simulador de {operacao} em <span className="capitalize text-fuchsia-400">{estrutura}</span></h1>
+              <p className="text-gray-400 text-sm mb-6">Mapeamento de performance baseado em dados estruturados estáticos.</p>
+            </div>
 
-            { isRodando ? (
-              <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-90 overflow-y-auto font-mono text-xs text-gray-400">
-                <div className="h-full w-full flex flex-col items-center justify-center gap-3 animate-[fadeIn_0.15s_ease-out]">
-                  {/* SPINNER CYBERPUNK: Roda em fuchsia com uma borda sutil */}
+            {/* AREA CENTRAL UNIFICADA DE RESULTADOS (ALTURA IGUAL PARA EVITAR PULO DE TELA) */}
+            <div className="flex-1 flex flex-col justify-center min-h-[380px]">
+              { isRodando ? (
+                <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-[380px] flex flex-col items-center justify-center gap-3 animate-[fadeIn_0.15s_ease-out]">
                   <div className="w-8 h-8 border-2 border-fuchsia-500/20 border-t-fuchsia-500 rounded-full animate-spin"></div>
                   <p className="text-gray-500 text-xs tracking-wider animate-pulse">
                     Processando buffers e estruturas...
                   </p>
                 </div>
-              </div>
-            ) : dadosGerados.length === 0 ? (
-              <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-90 overflow-y-auto font-mono text-xs text-gray-400">
-                <div className="h-full flex items-center justify-center text-gray-600 italic">
+              ) : dadosGerados.length === 0 ? (
+                <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-[380px] flex items-center justify-center text-gray-600 italic">
                   [Aguardando execução para renderizar dados amostrais]
                 </div>
-              </div>
               ) : (
-              <div>
-                <div className="grid grid-cols-5 gap-4 mb-6">
-                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Total</p>
-                    <p className="text-md font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao.toFixed(2)} ms` : '0.00 ms'}</p>
-                  </div>
-                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">Tempo Médio</p>
-                    <p className="text-md font-mono text-purple-400">
-                      {tempoExecucao !== null && iteracoes > 0
-                        ? `${(tempoExecucao / iteracoes).toFixed(2)} ms`
-                        : '0.00 ms'}
-                    </p>
-                  </div>
-                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">Dados em Memória</p>
-                    <p className="text-md font-mono text-emerald-400">{dadosGerados.length.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">RAM Consumida</p>
-                    <p className="text-md font-mono text-emerald-400">
-                      {memoriaConsumida !== null ? `${memoriaConsumida} MB` : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="bg-[#111] border border-[#1e2939] p-4 rounded-xl">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">Complexidade Absoluta</p>
-                    <p className="text-md font-mono text-blue-400">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(qtdItens * iteracoes)} ops</p>
-                    {/* {(qtdItens * iteracoes).toExponential(2)} */}
-                  </div>
-                </div>
-                <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-64 overflow-y-auto font-mono text-xs text-gray-400">
-                <div className="space-y-1">
-                  <p className="text-gray-500 border-b border-[#1e2939] pb-1 mb-2">// Primeiros 5 itens gerados no array:</p>
-                  {dadosGerados.slice(0, 5).map((item) => (
-                    <div key={item.idx} className="flex gap-4 hover:bg-[#12151b] p-1 rounded">
-                      <span className="text-blue-500">idx: {item.idx}</span>
-                      <span className="text-white">{item.nome}</span>
-                      <span className="text-amber-500">{item.categoria}</span>
-                      <span className="text-emerald-500">R$ {item.preco}</span>
-                      <span>Disponível: {item.isDisponivel}</span>
+                <div className="space-y-4 animate-[fadeIn_0.2s_ease-out]">
+                  <div className="grid grid-cols-5 gap-2.5">
+                    <div className="bg-[#111] border border-[#1e2939] p-3 rounded-xl text-center">
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mb-1">Tempo Total</p>
+                      <p className="text-sm font-mono text-fuchsia-400">{tempoExecucao !== null ? `${tempoExecucao.toFixed(2)} ms` : '0.00 ms'}</p>
                     </div>
-                  ))}
-                  <p className="text-gray-600 text-[10px] pt-2">... e mais {dadosGerados.length - 5} itens ocultados do preview por performance.</p>
+                    <div className="bg-[#111] border border-[#1e2939] p-3 rounded-xl text-center">
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mb-1">Tempo Médio</p>
+                      <p className="text-sm font-mono text-purple-400">
+                        {tempoExecucao !== null && iteracoes > 0
+                          ? `${(tempoExecucao / iteracoes).toFixed(4)} ms`
+                          : '0.0000 ms'}
+                      </p>
+                    </div>
+                    <div className="bg-[#111] border border-[#1e2939] p-3 rounded-xl text-center">
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mb-1">Em Memória</p>
+                      <p className="text-sm font-mono text-emerald-400">{dadosGerados.length.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-[#111] border border-[#1e2939] p-3 rounded-xl text-center">
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mb-1">RAM Gasta</p>
+                      <p className="text-sm font-mono text-teal-400">
+                        {memoriaConsumida !== null ? `${memoriaConsumida} MB` : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="bg-[#111] border border-[#1e2939] p-3 rounded-xl text-center">
+                      <p className="text-[9px] text-gray-500 font-bold uppercase mb-1">Complexidade</p>
+                      <p className="text-sm font-mono text-blue-400">{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(qtdItens * iteracoes)} ops</p>
+                    </div>
+                  </div>
+
+                  <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-[240px] overflow-y-auto font-mono text-xs text-gray-400">
+                    <div className="space-y-1">
+                      <p className="text-gray-500 border-b border-[#1e2939] pb-1 mb-2">// Primeiros 5 itens gerados no array:</p>
+                      {dadosGerados.slice(0, 5).map((item) => (
+                        <div key={item.idx} className="flex gap-4 hover:bg-[#12151b] p-1 rounded transition-colors">
+                          <span className="text-blue-500">idx: {item.idx}</span>
+                          <span className="text-white">{item.nome}</span>
+                          <span className="text-amber-500">{item.categoria}</span>
+                          <span className="text-emerald-500">R$ {item.preco}</span>
+                          <span>Disponível: {item.isDisponivel}</span>
+                        </div>
+                      ))}
+                      <p className="text-gray-600 text-[10px] pt-2">... e mais {(dadosGerados.length - 5).toLocaleString()} itens ocultados do preview por performance.</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-            )}
+
           </div>
         </section>
       </main>

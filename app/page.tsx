@@ -56,6 +56,7 @@ export default function Home() {
                   volumeAtualizacao={bench.volumeAtualizacao} setVolumeAtualizacao={bench.setVolumeAtualizacao}
                   tamanhoBuffer={bench.tamanhoBuffer} setTamanhoBuffer={bench.setTamanhoBuffer}
                   isRodando={bench.isRodando} iniciar={bench.iniciarMonitoramento} parar={bench.pararMonitoramento}
+                  resetar={bench.resetarBenchmark}
                 />
               )}
               {bench.cenarioAtivo === 'navegacao' && (

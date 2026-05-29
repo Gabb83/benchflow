@@ -60,7 +60,7 @@ export default function ConfigBusca({ estrutura, setEstrutura, qtdItens, setQtdI
         <button type="button" disabled={isRodando} onClick={executar} className="w-full bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/60 disabled:opacity-50 text-white text-xs font-semibold py-2 px-4 rounded-lg cursor-pointer">
           {isRodando ? 'Processando...' : 'Executar Benchmark'}
         </button>
-        <button type="button" onClick={resetar} className="w-full bg-rose-800/40 border border-rose-500/30 text-white text-xs font-semibold py-2 rounded-lg">Resetar</button>
+        <button type="button" onClick={resetar} className="w-full bg-rose-800/40 border border-rose-500/30 text-white text-xs font-semibold py-2 rounded-lg cursor-pointer">Resetar</button>
       </div>
     </div>
   );

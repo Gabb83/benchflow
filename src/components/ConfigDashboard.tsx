@@ -6,9 +6,12 @@ interface ConfigDashboardProps {
   volumeAtualizacao: number; setVolumeAtualizacao: (v: number) => void;
   tamanhoBuffer: number; setTamanhoBuffer: (v: number) => void;
   isRodando: boolean; iniciar: () => void; parar: () => void;
+  resetar: () => void;
 }
 
-export default function ConfigDashboard({ frequenciaMs, setFrequenciaMs, estruturaDashboard, setEstruturaDashboard, volumeAtualizacao, setVolumeAtualizacao, tamanhoBuffer, setTamanhoBuffer, isRodando, iniciar, parar }: ConfigDashboardProps) {
+export default function ConfigDashboard({ 
+  frequenciaMs, setFrequenciaMs, estruturaDashboard, setEstruturaDashboard, volumeAtualizacao, setVolumeAtualizacao, tamanhoBuffer, setTamanhoBuffer, isRodando, iniciar, parar, resetar
+}: ConfigDashboardProps) {
   const validarNumeros = (valor: string, callback: (v: number) => void) => {
     callback(Number(valor.replace(/\D/g, "")));
   };
@@ -55,6 +58,13 @@ export default function ConfigDashboard({ frequenciaMs, setFrequenciaMs, estrutu
           className={`w-full border text-white text-xs font-semibold py-2 px-4 rounded-lg cursor-pointer transition-colors ${isRodando ? 'bg-red-950/40 border-red-500/30 hover:bg-red-900/50' : 'bg-emerald-950/40 border-emerald-500/30 hover:bg-emerald-900/60'}`}
         >
           {isRodando ? 'Parar Monitoramento' : 'Iniciar Stream de Dados'}
+        </button>
+        <button
+          type="reset"
+          onClick={resetar}
+          className="w-full bg-rose-800/40 border border-rose-500/30 text-white text-xs font-semibold py-2 rounded-lg cursor-pointer"
+        >
+          Resetar
         </button>
       </div>
     </div>

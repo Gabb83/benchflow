@@ -2,23 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Registro, geracaoDeDados } from "@/src/utils/generateData";
-
-type CenarioId = 'busca' | 'dashboard' | 'navegacao';
-type EstruturaId = 'array' | 'map';
-type EstruturaDashboardId = 'array' | 'map' | 'fila';
-
-interface Cenario {
-  id: CenarioId;
-  titulo: string;
-  subtitulo: string;
-  contexto?: string;
-}
-
-interface PerformanceMemory {
-  jsHeapSizeLimit: number;
-  totalJSHeapSize: number;
-  usedJSHeapSize: number;
-}
+import Header from "@/src/components/Header";
+import type { CenarioId, EstruturaId, EstruturaDashboardId, Cenario, PerformanceMemory } from "../src/types/benchmark";
 
 declare global {
   interface Performance {
@@ -26,7 +11,6 @@ declare global {
   }
 }
 
-// Classe de apoio para a estrutura de Fila Real (Queue) com complexidade O(1)
 class FilaReal {
   itens: { [key: number]: Registro } = {};
   inicio = 0;
@@ -63,27 +47,23 @@ export default function Home() {
     { id: 'navegacao', titulo: 'Navegação', subtitulo: 'hierarquia multinível', contexto: 'Menus multiníveis e estruturas DOM' },
   ];
 
-  // Configurações do Cenário 1 (Busca)
   const [estrutura, setEstrutura] = useState<EstruturaId>('array');
   const [qtdItens, setQtdItens] = useState<number>(1000);
   const [operacao, setOperacao] = useState<string>('Busca');
   const [iteracoes, setIteracoes] = useState<number>(1000);
   const [termoBusca, setTermoBusca] = useState<string>("Produto #999");
 
-  // Configurações do Cenário 2 (Dashboard) - CORRIGIDO: Estados isolados
   const [estruturaDashboard, setEstruturaDashboard] = useState<EstruturaDashboardId>('array');
   const [frequenciaMs, setFrequenciaMs] = useState<number>(500);
   const [volumeAtualizacao, setVolumeAtualizacao] = useState<number>(50);
   const [tamanhoBuffer, setTamanhoBuffer] = useState<number>(500);
 
-  // Estados de Monitoramento e Performance
   const [dadosGerados, setDadosGerados] = useState<Registro[]>([]);
   const [tempoExecucao, setTempoExecucao] = useState<number | null>(null);
   const [memoriaConsumida, setMemoriaConsumida] = useState<number | null>(null);
   const [isRodando, setIsRodando] = useState<boolean>(false);
   const [fps, setFps] = useState<number>(60);
 
-  // Referências mutáveis para rodar o Stream em tempo real sem travar os estados do React
   const streamRef = useRef<NodeJS.Timeout | null>(null);
   const dadosDashboardRef = useRef<{
     array: Registro[];
@@ -96,18 +76,15 @@ export default function Home() {
     callback(Number(apenasNumeros));
   };
 
-  // Garante que se o usuário mudar de cenário, o monitoramento do dashboard pare imediatamente
   useEffect(() => {
     pararMonitoramento();
     resetarBenchmark();
   }, [cenarioAtivo]);
 
-  // Limpeza de segurança quando o componente desmontar
   useEffect(() => {
     return () => pararMonitoramento();
   }, []);
 
-  // --- EXECUÇÃO CENÁRIO 1 (ESTÁTICO) ---
   const lidarComExecucaoCenario1 = () => {
     setIsRodando(true);
     setMemoriaConsumida(null);
@@ -158,12 +135,10 @@ export default function Home() {
     }, 50);
   };
 
-  // --- EXECUÇÃO CENÁRIO 2 (STREAM DINÂMICO DE DASHBOARD) ---
   const iniciarMonitoramento = () => {
     setIsRodando(true);
     resetarBenchmark();
     
-    // Inicia a massa crítica de dados na referência em background
     dadosDashboardRef.current.array = geracaoDeDados(tamanhoBuffer);
     dadosDashboardRef.current.map = new Map(dadosDashboardRef.current.array.map(p => [p.nome, p]));
     dadosDashboardRef.current.fila = new FilaReal();
@@ -172,7 +147,6 @@ export default function Home() {
     let ultimoTempoFrame = performance.now();
     let frames = 0;
 
-    // Função interna para medir o FPS da aba do navegador sob estresse
     const medirFps = () => {
       const agora = performance.now();
       frames++;
@@ -185,39 +159,31 @@ export default function Home() {
     };
     requestAnimationFrame(medirFps);
 
-    // Loop do Stream de Dados simulando rajadas da API/Rede
     streamRef.current = setInterval(() => {
       const suportaMemoria = typeof window !== 'undefined' && window.performance && window.performance.memory;
       const m0 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
       const t0 = performance.now();
 
-      // Gera os novos pacotes que chegaram no segundo atual
       const novosDados = geracaoDeDados(volumeAtualizacao);
 
       if (estruturaDashboard === 'array') {
         let arr = [...dadosDashboardRef.current.array];
         novosDados.forEach(novoItem => {
-          // Busca linear O(n) para atualizar ou empurra pro fim se for novo
           const indiceExistente = arr.findIndex(p => p.nome === novoItem.nome);
           if (indiceExistente !== -1) {
             arr[indiceExistente] = novoItem;
           } else {
             arr.push(novoItem);
           }
-          // Se estourar o buffer configurado, corta o elemento mais antigo da frente O(n)
           if (arr.length > tamanhoBuffer) arr.shift();
         });
         dadosDashboardRef.current.array = arr;
-        setDadosGerados(arr.slice(0, 5)); // Atualiza apenas o preview visual
+        setDadosGerados(arr.slice(0, 5));
       } 
-      
       else if (estruturaDashboard === 'map') {
         let mapa = new Map(dadosDashboardRef.current.map);
         novosDados.forEach(novoItem => {
-          // Atualização direta indexada O(1)
           mapa.set(novoItem.nome, novoItem);
-          
-          // Tratamento para manter tamanho máximo estável do Buffer
           if (mapa.size > tamanhoBuffer) {
             const primeiraChave = mapa.keys().next().value;
             if (primeiraChave) mapa.delete(primeiraChave);
@@ -226,7 +192,6 @@ export default function Home() {
         dadosDashboardRef.current.map = mapa;
         setDadosGerados(Array.from(mapa.values()).slice(0, 5));
       } 
-      
       else if (estruturaDashboard === 'fila') {
         let q = dadosDashboardRef.current.fila;
         novosDados.forEach(novoItem => {
@@ -265,23 +230,13 @@ export default function Home() {
 
   return (
     <div className="bg-[#111111] text-white min-h-screen">
-      <header className="bg-[#121212] p-5 flex flex-row items-center justify-between border-b border-[#1e2939]/30">
-        <div>
-          <h1 className="text-xl font-black tracking-tighter italic">BenchFlow.</h1>
-        </div>
-        <div className="flex flex-row items-center justify-between gap-5">
-          <button 
-            onClick={cenarioAtivo === 'busca' ? lidarComExecucaoCenario1 : (isRodando ? pararMonitoramento : iniciarMonitoramento)} 
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer text-white ${
-              cenarioAtivo === 'dashboard' && isRodando ? 'bg-red-800 hover:bg-red-700' : 'bg-[#1e2939] hover:bg-[#2b3a50]'
-            }`}
-          >
-            {cenarioAtivo === 'dashboard' && isRodando ? 'Parar Stream' : 'Executar'}
-          </button>
-          <button className="text-sm font-medium hover:text-gray-300 transition-colors">Exportar</button>
-          <p className="text-xs bg-[#1e2939]/50 text-gray-400 px-2 py-1 rounded border border-[#1e2939]">MVP v1.0</p>
-        </div>
-      </header>
+      <Header
+        cenarioAtivo={cenarioAtivo} 
+        isRodando={isRodando} 
+        lidarComExecucaoCenario1={lidarComExecucaoCenario1} 
+        iniciarMonitoramento={iniciarMonitoramento} 
+        pararMonitoramento={pararMonitoramento} 
+      />
       
       <main className="grid grid-cols-12 gap-4 p-4 min-h-[calc(100vh-80px)]">
         <aside className="col-span-4 flex flex-row gap-3">
@@ -337,7 +292,6 @@ export default function Home() {
             <h2 className="text-center font-bold uppercase tracking-wider text-xs text-gray-400">CONFIGURAÇÃO</h2>
             <div className="flex flex-col gap-4 mt-2">
               
-              {/* CONFIGS CENÁRIO 1 */}
               {cenarioAtivo === 'busca' && (
                 <div className="space-y-3 animate-[fadeIn_0.2s_ease-out]">
                   <div className="space-y-1.5">
@@ -381,7 +335,8 @@ export default function Home() {
 
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">ITERAÇÕES</label>
-                    <input type="text" inputMode="numeric" value={iteracoes} onChange={(e) => validarApenasNumeros(e.target.value, setSetIteracoes)} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm font-mono" />
+                    {/* BUG CORRIGIDO AQUI: setSetIteracoes alterado para setIteracoes */}
+                    <input type="text" inputMode="numeric" value={iteracoes} onChange={(e) => validarApenasNumeros(e.target.value, setIteracoes)} className="w-full bg-[#111] border border-[#1e2939] rounded px-3 py-1.5 text-sm font-mono" />
                   </div>
 
                   <div className="pt-1 space-y-2">
@@ -393,7 +348,6 @@ export default function Home() {
                 </div> 
               )}
 
-              {/* CONFIGS CENÁRIO 2 (TOTALMENTE CONECTADO E FUNCIONAL AGORA) */}
               {cenarioAtivo === 'dashboard' && (
                 <div className="space-y-3 animate-[fadeIn_0.2s_ease-out]">
                   <div>
@@ -476,7 +430,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* AREA CENTRAL UNIFICADA */}
             <div className="flex-1 flex flex-col justify-center min-h-[380px]">
               {cenarioAtivo === 'busca' && isRodando ? (
                 <div className="border border-[#1e2939] rounded-xl bg-[#111] p-4 h-[380px] flex flex-col items-center justify-center gap-3 animate-[fadeIn_0.15s_ease-out]">
@@ -544,7 +497,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-
           </div>
         </section>
       </main>

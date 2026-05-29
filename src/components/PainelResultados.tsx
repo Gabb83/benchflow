@@ -7,7 +7,9 @@ interface PainelResultadosProps {
   fps: number; iteracoes: number; volumeAtualizacao: number; qtdItens: number; tamanhoBuffer: number;
 }
 
-export default function PainelResultados({ cenarioAtivo, operacao, estrutura, estruturaDashboard, isRodando, dadosGerados, tempoExecucao, memoriaConsumida, fps, iteracoes, volumeAtualizacao, qtdItens, tamanhoBuffer }: PainelResultadosProps) {
+export default function PainelResultados({
+ cenarioAtivo, operacao, estrutura, estruturaDashboard, isRodando, dadosGerados, tempoExecucao, memoriaConsumida, fps, iteracoes, volumeAtualizacao, qtdItens, tamanhoBuffer 
+}: PainelResultadosProps) {
   return (
     <section className="col-span-8 border border-[#1e2939] bg-[#12151b] rounded-2xl p-6 flex flex-col justify-between">
       <div className="flex flex-col h-full justify-between">
@@ -16,7 +18,7 @@ export default function PainelResultados({ cenarioAtivo, operacao, estrutura, es
             {cenarioAtivo === 'busca' ? `Simulador de ${operacao}` : 'Monitor de Atualização de Dashboard'} em{' '}
             <span className="capitalize text-fuchsia-400">{cenarioAtivo === 'busca' ? estrutura : estruturaDashboard}</span>
           </h1>
-          <p className="text-gray-400 text-sm mb-6">
+          <p className="text-gray-400 text-sm">
             {cenarioAtivo === 'busca' ? 'Mapeamento de performance baseado em dados estruturados estáticos.' : 'Mapeamento de mutação e ingestão de streams de dados em tempo real.'}
           </p>
         </div>

@@ -25,6 +25,7 @@ export default function Home() {
         lidarComExecucaoCenario1={bench.lidarComExecucaoCenario1} 
         iniciarMonitoramento={bench.iniciarMonitoramento} 
         pararMonitoramento={bench.pararMonitoramento} 
+        exportarDados={bench.exportarDadosJson}
       />
       
       <main className="grid grid-cols-12 gap-4 p-4 min-h-[calc(100vh-80px)]">

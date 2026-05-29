@@ -187,6 +187,43 @@ export function useBenchmark() {
     }, frequenciaMs);
   };
 
+  const exportarDadosJson = () => {
+    const dadosParaExportar = {
+      timestamp: new Date().toISOString(),
+      cenarioAtual: cenarioAtivo,
+      configuracoes: cenarioAtivo === "busca" ? {
+        estrutura,
+        qtdItens,
+        operacao,
+        iteracoes,
+        termoBusca,
+      } : {
+        estruturaDashboard,
+        frequenciaMs,
+        volumeAtualizacao,
+        tamanhoBuffer,
+      },
+      resultados: {
+        tempoExecucaoMs: tempoExecucao,
+        memoriaConsumidaMb: memoriaConsumida,
+        estabilidadefps: cenarioAtivo === "dashboard" ? fps : null,
+      },
+      amostraDados: dadosGerados,
+    };
+
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(dadosParaExportar, null, 2)
+    )}`;
+
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", jsonString);
+    downloadAnchor.setAttribute("download", `benchflow-${cenarioAtivo}-${Date.now()}.json`);
+
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   return {
     cenarioAtivo, setCenarioAtivo,
     estrutura, setEstrutura,
@@ -199,6 +236,7 @@ export function useBenchmark() {
     volumeAtualizacao, setVolumeAtualizacao,
     tamanhoBuffer, setTamanhoBuffer,
     dadosGerados, tempoExecucao, memoriaConsumida, isRodando, fps,
-    lidarComExecucaoCenario1, iniciarMonitoramento, pararMonitoramento, resetarBenchmark
+    lidarComExecucaoCenario1, iniciarMonitoramento, pararMonitoramento, resetarBenchmark,
+    exportarDadosJson,
   };
 }

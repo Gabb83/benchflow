@@ -31,3 +31,59 @@ export const geracaoDeDados = (tamanho: number): Registro[] => {
     preco: parseFloat((Math.random() * 1000).toFixed(2)),
   }));
 };
+
+// src/utils/generateData.ts
+import { NoNavegacao } from "../types/benchmark";
+
+/**
+ * Gera uma estrutura de árvore hierárquica multinível para simular menus/rotas complexas.
+ * @param ramificacao Quantos filhos cada nó terá
+ * @param profundidadeMaxima Quantos níveis de aninhamento a árvore terá
+ */
+export function gerarArvoreNavegacao(ramificacao: number, profundidadeMaxima: number): NoNavegacao[] {
+  const raizes: NoNavegacao[] = [];
+
+  // Função interna recursiva para construir os nós filhos
+  const herdarFilhos = (idPai: string, nivelAtual: number): NoNavegacao[] => {
+    if (nivelAtual > profundidadeMaxima) return [];
+
+    const filhos: NoNavegacao[] = [];
+    
+    for (let i = 1; i <= ramificacao; i++) {
+      const idNo = `${idPai}.${i}`;
+      filhos.push({
+        id: idNo,
+        label: `Menu Nível ${nivelAtual} #${i}`,
+        url: `/nav/${idNo.replace(/\./g, '/')}`,
+        children: herdarFilhos(idNo, nivelAtual + 1)
+      });
+    }
+
+    return Array.from(filhos);
+  };
+
+  // Cria os nós principais (Raiz - Nível 1)
+  for (let i = 1; i <= ramificacao; i++) {
+    const idRaiz = `${i}`;
+    raizes.push({
+      id: idRaiz,
+      label: `Home Categoria ${i}`,
+      url: `/nav/${idRaiz}`,
+      children: herdarFilhos(idRaiz, 2)
+    });
+  }
+
+  return raizes;
+}
+
+/**
+ * Função auxiliar para sortear um ID de nó folha (o mais profundo possível)
+ * para usarmos como alvo fixo nos testes de busca.
+ */
+export function obterIdFolhaAleatorio(ramificacao: number, profundidade: number): string {
+  const partes: number[] = [];
+  for (let i = 0; i < profundidade; i++) {
+    partes.push(Math.floor(Math.random() * ramificacao) + 1);
+  }
+  return partes.join('.');
+}

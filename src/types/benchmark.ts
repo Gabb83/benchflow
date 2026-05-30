@@ -16,3 +16,21 @@ export interface PerformanceMemory {
   totalJSHeapSize: number;
   usedJSHeapSize: number;
 }
+
+export interface NoNavegacao {
+  id: string;
+  label: string;
+  url: string;
+  children: string | any;
+}
+
+export interface NoPlanificado {
+  id: string;
+  label: string;
+  url: string;
+  parentId: string | null;
+  caminhoCompleto: string; 
+}
+
+export type EstruturaNavegacaoId = 'arvore_recursiva' | 'mapa_planificado';
+export type OperacaoNavegacaoId = 'buscar_breadcrumb' | 'planificar_total';

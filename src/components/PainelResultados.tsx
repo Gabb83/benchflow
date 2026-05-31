@@ -81,7 +81,7 @@ export default function PainelResultados({
                       <span className="text-blue-500">idx: {item.idx}</span>
                       <span className="text-white">{item.nome}</span>
                       <span className="text-amber-500">{item.categoria}</span>
-                      <span className="text-emerald-500">R$ {item.preco.toFixed(2)}</span>
+                      <span className="text-emerald-500">R$ {item.preco !== undefined && item.preco !== null ? item.preco.toFixed(2) : '0.00'}</span>
                       <span className="text-xs text-gray-600 animate-pulse">● Live</span>
                     </div>
                   ))}

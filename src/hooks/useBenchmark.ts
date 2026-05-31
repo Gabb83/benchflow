@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Registro, geracaoDeDados } from "@/src/utils/generateData";
+import { Registro, geracaoDeDados, gerarArvoreNavegacao, obterIdFolhaAleatorio, planificarArvore } from "@/src/utils/generateData";
 import { Fila } from "@/src/utils/fila";
-import type { CenarioId, EstruturaId, EstruturaDashboardId } from "@/src/types/benchmark";
+import type { CenarioId, EstruturaId, EstruturaDashboardId, EstruturaNavegacaoId, OperacaoNavegacaoId, NoNavegacao } from "@/src/types/benchmark";
 
 export function useBenchmark() {
   const [cenarioAtivo, setCenarioAtivo] = useState<CenarioId>('busca');
@@ -21,12 +21,20 @@ export function useBenchmark() {
   const [volumeAtualizacao, setVolumeAtualizacao] = useState<number>(50);
   const [tamanhoBuffer, setTamanhoBuffer] = useState<number>(500);
 
-  // Estados de Telemetria
-  const [dadosGerados, setDadosGerados] = useState<Registro[]>([]);
+  // Estados do Cenário 3 (Navegação)
+  const [estruturaNav, setEstruturaNav] = useState<EstruturaNavegacaoId>('arvore_recursiva');
+  const [operacaoNav, setOperacaoNav] = useState<OperacaoNavegacaoId>('buscar_breadcrumb');
+  const [ramificacaoNav, setRamificacaoNav] = useState<number>(3);
+  const [profundidadeNav, setProfundidadeNav] = useState<number>(5);
+  const [iteracoesNav, setIteracoesNav] = useState<number>(1000);
+
+  // Estados de Telemetria Geral
+  const [dadosGerados, setDadosGerados] = useState<any[]>([]); // Tipagem genérica flexível para aceitar nós ou produtos
   const [tempoExecucao, setTempoExecucao] = useState<number | null>(null);
   const [memoriaConsumida, setMemoriaConsumida] = useState<number | null>(null);
   const [isRodando, setIsRodando] = useState<boolean>(false);
   const [fps, setFps] = useState<number>(60);
+  const [pilhaProfundidade, setPilhaProfundidade] = useState<number | null>(null); // Nova métrica teórica pro cenário 3
 
   const streamRef = useRef<NodeJS.Timeout | null>(null);
   const dadosDashboardRef = useRef<{
@@ -49,6 +57,7 @@ export function useBenchmark() {
     setTempoExecucao(null);
     setMemoriaConsumida(null);
     setFps(60);
+    setPilhaProfundidade(null);
   };
 
   const pararMonitoramento = () => {
@@ -59,6 +68,22 @@ export function useBenchmark() {
     setIsRodando(false);
   };
 
+  // --- ALGORITMO RECURSIVO DO CENÁRIO 3 (DFS - Depth First Search) ---
+  const buscarNoRecursivo = (nos: NoNavegacao[], idAlvo: string, caminhoAtual: string[] = []): string[] | null => {
+    for (const no of nos) {
+      const novoCaminho = [...caminhoAtual, no.label];
+      
+      if (no.id === idAlvo) return novoCaminho;
+      
+      if (no.children && no.children.length > 0) {
+        const resultado = buscarNoRecursivo(no.children, idAlvo, novoCaminho);
+        if (resultado) return resultado;
+      }
+    }
+    return null;
+  };
+
+  // --- EXECUÇÃO DO CENÁRIO 1 (ESTÁTICO) ---
   const lidarComExecucaoCenario1 = () => {
     setIsRodando(true);
     setMemoriaConsumida(null);
@@ -109,6 +134,7 @@ export function useBenchmark() {
     }, 50);
   };
 
+  // --- EXECUÇÃO DO CENÁRIO 2 (STREAM DINÂMICO) ---
   const iniciarMonitoramento = () => {
     setIsRodando(true);
     resetarBenchmark();
@@ -187,6 +213,69 @@ export function useBenchmark() {
     }, frequenciaMs);
   };
 
+  // --- EXECUÇÃO DO CENÁRIO 3 (NAVEGAÇÃO EM ÁRVORE) ---
+  const lidarComExecucaoCenario3 = () => {
+    setIsRodando(true);
+    setMemoriaConsumida(null);
+    setTempoExecucao(null);
+    setPilhaProfundidade(null);
+
+    setTimeout(() => {
+      const suportaMemoria = typeof window !== 'undefined' && window.performance && window.performance.memory;
+      const m0 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      const t0 = performance.now();
+
+      // 1. Geração da árvore crua em memória
+      const arvoreBase = gerarArvoreNavegacao(ramificacaoNav, profundidadeNav);
+      
+      // Sorteia um ID no fundo máximo para ser o alvo de busca do estresse
+      const idAlvoFixo = obterIdFolhaAleatorio(ramificacaoNav, profundidadeNav);
+
+      // 2. Setup do Mapa se a estrutura escolhida for a otimizada
+      let mapaPlanificado = new Map();
+      if (estruturaNav === 'mapa_planificado') {
+        mapaPlanificado = planificarArvore(arvoreBase);
+      }
+
+      // 3. Laço de Repetições do Benchmark (Estresse)
+      let amostraUltimoResultado: any = null;
+
+      for (let i = 0; i < iteracoesNav; i++) {
+        if (operacaoNav === 'buscar_breadcrumb') {
+          if (estruturaNav === 'arvore_recursiva') {
+            amostraUltimoResultado = buscarNoRecursivo(arvoreBase, idAlvoFixo);
+          } else if (estruturaNav === 'mapa_planificado') {
+            const noObtido = mapaPlanificado.get(idAlvoFixo);
+            amostraUltimoResultado = noObtido ? noObtido.caminhoCompleto.split(" ➔ ") : ["Não encontrado"];
+          }
+        } else if (operacaoNav === 'planificar_total') {
+          amostraUltimoResultado = planificarArvore(arvoreBase);
+        }
+      }
+
+      const t1 = performance.now();
+      const m1 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+
+      // Grava o resultado visual para renderizar na tela
+      if (operacaoNav === 'buscar_breadcrumb' && Array.isArray(amostraUltimoResultado)) {
+        setDadosGerados([{ id: idAlvoFixo, caminho: amostraUltimoResultado.join(" ➔ ") }]);
+      } else if (operacaoNav === 'planificar_total' && mapaPlanificado) {
+        setDadosGerados(Array.from(estruturaNav === 'mapa_planificado' ? mapaPlanificado.values() : planificarArvore(arvoreBase).values()).slice(0, 4));
+      }
+
+      if (suportaMemoria) {
+        const diferencaBytes = m1 - m0;
+        setMemoriaConsumida(diferencaBytes > 0 ? parseFloat((diferencaBytes / (1024 * 1024)).toFixed(2)) : 0.01);
+      }
+
+      // Configura as métricas finais
+      setTempoExecucao(parseFloat((t1 - t0).toFixed(2)));
+      setPilhaProfundidade(estruturaNav === 'arvore_recursiva' ? profundidadeNav : 1); // No Map a pilha é estável em 1
+      setIsRodando(false);
+    }, 50);
+  };
+
+  // --- EXPORTAR RELATÓRIO JSON ---
   const exportarDadosJson = () => {
     const dadosParaExportar = {
       timestamp: new Date().toISOString(),
@@ -197,16 +286,23 @@ export function useBenchmark() {
         operacao,
         iteracoes,
         termoBusca,
-      } : {
+      } : cenarioAtivo === "dashboard" ? {
         estruturaDashboard,
         frequenciaMs,
         volumeAtualizacao,
         tamanhoBuffer,
+      } : {
+        estruturaNav,
+        operacaoNav,
+        ramificacaoNav,
+        profundidadeNav,
+        iteracoesNav
       },
       resultados: {
         tempoExecucaoMs: tempoExecucao,
         memoriaConsumidaMb: memoriaConsumida,
         estabilidadefps: cenarioAtivo === "dashboard" ? fps : null,
+        profundidadePilhaMax: cenarioAtivo === "navegacao" ? pilhaProfundidade : null
       },
       amostraDados: dadosGerados,
     };
@@ -235,8 +331,14 @@ export function useBenchmark() {
     frequenciaMs, setFrequenciaMs,
     volumeAtualizacao, setVolumeAtualizacao,
     tamanhoBuffer, setTamanhoBuffer,
-    dadosGerados, tempoExecucao, memoriaConsumida, isRodando, fps,
+    estruturaNav, setEstruturaNav,
+    operacaoNav, setOperacaoNav,
+    ramificacaoNav, setRamificacaoNav,
+    profundidadeNav, setProfundidadeNav,
+    iteracoesNav, setIteracoesNav,
+    dadosGerados, tempoExecucao, memoriaConsumida, isRodando, fps, pilhaProfundidade,
     lidarComExecucaoCenario1, iniciarMonitoramento, pararMonitoramento, resetarBenchmark,
+    lidarComExecucaoCenario3,
     exportarDadosJson,
   };
 }

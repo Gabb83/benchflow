@@ -7,6 +7,7 @@ import ConfigDashboard from "@/src/components/ConfigDashboard";
 import PainelResultados from "@/src/components/PainelResultados";
 import { useBenchmark } from "@/src/hooks/useBenchmark";
 import type { Cenario } from "@/src/types/benchmark";
+import ConfigNav from "@/src/components/ConfigNav";
 
 export default function Home() {
   const bench = useBenchmark();
@@ -61,7 +62,20 @@ export default function Home() {
                 />
               )}
               {bench.cenarioAtivo === 'navegacao' && (
-                <p className="text-xs text-gray-500 italic">Sem configurações específicas para este cenário.</p>
+                <ConfigNav
+                  isRodando={bench.isRodando}
+                  estrutura={bench.estruturaNav}
+                  setEstrutura={bench.setEstruturaNav}
+                  operacao={bench.operacaoNav}
+                  setOperacao={bench.setOperacaoNav}
+                  ramificacao={bench.ramificacaoNav}
+                  setRamificacao={bench.setRamificacaoNav}
+                  profundidade={bench.profundidadeNav}
+                  setProfundidade={bench.setProfundidadeNav}
+                  iteracoes={bench.iteracoesNav}
+                  setIteracoes={bench.setIteracoesNav}
+                  executarBenchmark={bench.lidarComExecucaoCenario3}
+                />
               )}
             </div>
           </div>

@@ -2,12 +2,12 @@
 
 import Header from "@/src/components/Header";
 import CenariosList from "@/src/components/CenarioList";
-import ConfigBusca from "@/src/components/ConfigBusca";
-import ConfigDashboard from "@/src/components/ConfigDashboard";
+import ConfigBusca from "@/src/components/Configs/ConfigBusca";
+import ConfigDashboard from "@/src/components/Configs/ConfigDashboard";
 import PainelResultados from "@/src/components/PainelResultados";
 import { useBenchmark } from "@/src/hooks/useBenchmark";
 import type { Cenario } from "@/src/types/benchmark";
-import ConfigNav from "@/src/components/ConfigNav";
+import ConfigNav from "@/src/components/Configs/ConfigNav";
 
 export default function Home() {
   const bench = useBenchmark();
@@ -85,7 +85,8 @@ export default function Home() {
           cenarioAtivo={bench.cenarioAtivo} operacao={bench.operacao} estrutura={bench.estrutura} estruturaDashboard={bench.estruturaDashboard}
           isRodando={bench.isRodando} dadosGerados={bench.dadosGerados} tempoExecucao={bench.tempoExecucao} memoriaConsumida={bench.memoriaConsumida}
           fps={bench.fps} iteracoes={bench.iteracoes} volumeAtualizacao={bench.volumeAtualizacao} qtdItens={bench.qtdItens} tamanhoBuffer={bench.tamanhoBuffer}
-        />
+          estruturaNav={bench.estruturaNav} operacaoNav={bench.operacaoNav} iteracoesNav={bench.iteracoesNav} profundidade={bench.profundidadeNav}
+       />
       </main>
     </div>
   );

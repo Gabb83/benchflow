@@ -1,4 +1,4 @@
-import { EstruturaDashboardId } from "../types/benchmark";
+import { EstruturaDashboardId } from "../../types/benchmark";
 
 interface ConfigDashboardProps {
   frequenciaMs: number; setFrequenciaMs: (v: number) => void;

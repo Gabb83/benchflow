@@ -1,6 +1,6 @@
 "use client";
 
-import { EstruturaNavegacaoId, OperacaoNavegacaoId } from "../types/benchmark";
+import { EstruturaNavegacaoId, OperacaoNavegacaoId } from "../../types/benchmark";
 
 interface ConfigNavProps {
   isRodando: boolean;
@@ -84,8 +84,8 @@ export default function ConfigNav({
           onChange={(e) => setOperacao(e.target.value as OperacaoNavegacaoId)}
           className="w-full bg-[#161b22]/80 border border-[#1e2939]/60 rounded-lg py-2 px-3 text-xs text-gray-200 outline-none focus:border-fuchsia-500/50 transition-colors cursor-pointer appearance-none"
         >
-          <option value="buscar_breadcrumb">Rastrear Caminho (Breadcrumb)</option>
-          <option value="planificar_total">Planificar Árvore (Flatten)</option>
+          <option value="buscar_breadcrumb">Rastrear Caminho</option>
+          <option value="planificar_total">Planificar Árvore</option>
         </select>
       </div>
 
@@ -188,7 +188,6 @@ export default function ConfigNav({
           )}
         </button>
       </div>
-
     </div>
   );
 }

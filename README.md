@@ -1,4 +1,4 @@
-# BenchFlow
+# 🖥️ BenchFlow
 
 O BenchFlow é um ambiente web experimental que foi projetado para ser uma ferramenta de benchmarking que permite aos usuários visualizar e comparar o desempenho de algumas estruturas empregadas em diferentes cenários técnicos em termos de performance e experiência do usuário dentro da camada de aplicação (front-end).
 

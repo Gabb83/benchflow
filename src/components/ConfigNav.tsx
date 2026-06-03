@@ -42,8 +42,8 @@ export default function ConfigNav({
       
       {/* SEÇÃO 1: ARQUITETURA DE DADOS */}
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-mono uppercase tracking-wider text-gray-400">
-          Estrutura de Armazenamento
+        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">
+          Estrutura de dados
         </label>
         <div className="grid grid-cols-2 gap-2 bg-[#161b22]/50 p-1 rounded-lg border border-[#1e2939]/40">
           <button
@@ -56,7 +56,7 @@ export default function ConfigNav({
                 : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            Árvore Recursiva
+            Árvore
           </button>
           <button
             type="button"
@@ -68,14 +68,14 @@ export default function ConfigNav({
                 : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            Mapa Plano O(1)
+            Map
           </button>
         </div>
       </div>
 
       {/* SEÇÃO 2: ALVO DO TESTE */}
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-mono uppercase tracking-wider text-gray-400">
+        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">
           Operação do Algoritmo
         </label>
         <select
@@ -129,7 +129,7 @@ export default function ConfigNav({
 
       {/* SEÇÃO 4: ITERAÇÕES */}
       <div className="flex flex-col gap-2">
-        <label className="text-[11px] font-mono uppercase tracking-wider text-gray-400">
+       <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">
           Volume de Loops
         </label>
         <select
@@ -145,10 +145,10 @@ export default function ConfigNav({
       </div>
 
       {/* CARD DE TELEMETRIA PRÉVIA */}
-      <div className="bg-[#1a1f29]/30 border border-[#1e2939]/40 p-3 rounded-lg flex items-center justify-between">
-        <span className="text-[11px] text-gray-400 font-medium">Nós em memória:</span>
-        <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-500/20">
-          {totalNosAproximado.toLocaleString('pt-BR')} elementos
+      <div className="bg-[#1a1f29]/30 border border-[#1e2939]/40 p-2 rounded-lg flex items-center justify-between">
+        <span className="text-[12px] font-medium">Elementos:</span>
+        <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/20 px-2 rounded border border-cyan-500/20">
+          {totalNosAproximado.toLocaleString('pt-BR')}
         </span>
       </div>
 

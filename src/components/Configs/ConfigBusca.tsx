@@ -1,4 +1,4 @@
-import { EstruturaId } from "../types/benchmark";
+import { EstruturaId } from "../../types/benchmark";
 
 interface ConfigBuscaProps {
   estrutura: EstruturaId; setEstrutura: (e: EstruturaId) => void;

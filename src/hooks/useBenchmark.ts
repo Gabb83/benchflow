@@ -90,8 +90,8 @@ export function useBenchmark() {
     setTempoExecucao(null);
 
     setTimeout(() => {
-      const suportaMemoria = typeof window !== 'undefined' && window.performance && window.performance.memory;
-      const m0 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      const suportaMemoria = typeof window !== 'undefined' && window.performance && (window.performance as any).memory;
+      const m0 = suportaMemoria ? (window.performance as any).memory.usedJSHeapSize : 0;
       const t0 = performance.now();
       
       const listaProdutos = geracaoDeDados(qtdItens);
@@ -123,7 +123,7 @@ export function useBenchmark() {
       }
 
       const t1 = performance.now();
-      const m1 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      const m1 = suportaMemoria ? (window.performance as any).memory.usedJSHeapSize : 0;
 
       if (suportaMemoria) {
         const diferencaBytes = m1 - m0;
@@ -160,8 +160,8 @@ export function useBenchmark() {
     requestAnimationFrame(medirFps);
 
     streamRef.current = setInterval(() => {
-      const suportaMemoria = typeof window !== 'undefined' && window.performance && window.performance.memory;
-      const m0 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      const suportaMemoria = typeof window !== 'undefined' && window.performance && (window.performance as any).memory;
+      const m0 = suportaMemoria ? (window.performance as any).memory.usedJSHeapSize : 0;
       const t0 = performance.now();
 
       const novosDados = geracaoDeDados(volumeAtualizacao);
@@ -203,7 +203,7 @@ export function useBenchmark() {
       }
 
       const t1 = performance.now();
-      const m1 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      const m1 = suportaMemoria ? (window.performance as any).memory.usedJSHeapSize : 0;
 
       if (suportaMemoria) {
         const diff = m1 - m0;
@@ -221,8 +221,8 @@ export function useBenchmark() {
     setPilhaProfundidade(null);
 
     setTimeout(() => {
-      const suportaMemoria = typeof window !== 'undefined' && window.performance && window.performance.memory;
-      const m0 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      const suportaMemoria = typeof window !== 'undefined' && window.performance && (window.performance as any).memory;
+      const m0 = suportaMemoria ? (window.performance as any).memory.usedJSHeapSize : 0;
       const t0 = performance.now();
 
       // 1. Geração da árvore crua em memória
@@ -254,7 +254,7 @@ export function useBenchmark() {
       }
 
       const t1 = performance.now();
-      const m1 = suportaMemoria ? window.performance.memory.usedJSHeapSize : 0;
+      const m1 = suportaMemoria ? (window.performance as any).memory.usedJSHeapSize : 0;
 
       // Grava o resultado visual para renderizar na tela
       if (operacaoNav === 'buscar_breadcrumb' && Array.isArray(amostraUltimoResultado)) {
